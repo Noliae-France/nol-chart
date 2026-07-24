@@ -4,6 +4,6 @@ version = "0.1.0"
 entree = "src/lib.nol"
 auteur = "daliranas <bastien@languedoc.ovh>"
 licence = "MIT"
-description = "Plans comptables (PCG francais) : classes, comptes, validation, en pur Nolc."
+description = "Plans comptables (PCG français) : classes, comptes, validation, en pur Nolc."
 
 [dependances]
