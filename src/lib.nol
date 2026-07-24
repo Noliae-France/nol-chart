@@ -1,0 +1,117 @@
+// nol.chart — plans comptables (PCG français), en pur Nolc.
+//
+// Un compte est identifié par un numéro (chaîne de chiffres). Le premier chiffre
+// donne la CLASSE du Plan Comptable Général :
+//   1 Capitaux · 2 Immobilisations · 3 Stocks · 4 Tiers · 5 Financiers
+//   6 Charges · 7 Produits · 8 Comptes spéciaux
+// Classes 1 à 5 = comptes de BILAN ; 6 et 7 = comptes de GESTION (résultat).
+
+// Le numéro est-il un compte valide (que des chiffres, cl 1..8) ?
+fn compte_valide(numero: Text) -> Bool {
+    if len(numero) == 0 {
+        return false
+    }
+    var i = 0
+    while i < len(numero) {
+        let c = char_at(numero, i)
+        if unwrap_or(find("0123456789", c), -1) < 0 {
+            return false
+        }
+        i += 1
+    }
+    let cl = compte_classe(numero)
+    return cl >= 1 and cl <= 8
+}
+
+// Classe (premier chiffre) d'un compte ; 0 si vide.
+fn compte_classe(numero: Text) -> Int {
+    if len(numero) == 0 {
+        return 0
+    }
+    return unwrap_or(parse_int(sub(numero, 0, 1)), 0)
+}
+
+// Nom de la cl PCG.
+fn classe_nom(cl: Int) -> Text {
+    if cl == 1 {
+        return "Comptes de capitaux"
+    }
+    if cl == 2 {
+        return "Comptes d'immobilisations"
+    }
+    if cl == 3 {
+        return "Comptes de stocks et en-cours"
+    }
+    if cl == 4 {
+        return "Comptes de tiers"
+    }
+    if cl == 5 {
+        return "Comptes financiers"
+    }
+    if cl == 6 {
+        return "Comptes de charges"
+    }
+    if cl == 7 {
+        return "Comptes de produits"
+    }
+    if cl == 8 {
+        return "Comptes spéciaux"
+    }
+    return "Classe inconnue"
+}
+
+// Compte de bilan (classes 1 à 5) ?
+fn compte_bilan(numero: Text) -> Bool {
+    let c = compte_classe(numero)
+    return c >= 1 and c <= 5
+}
+
+// Compte de gestion / résultat (classes 6 et 7) ?
+fn compte_gestion(numero: Text) -> Bool {
+    let c = compte_classe(numero)
+    return c == 6 or c == 7
+}
+
+// Compte de charge (cl 6) ? de produit (cl 7) ?
+fn compte_charge(numero: Text) -> Bool {
+    return compte_classe(numero) == 6
+}
+fn compte_produit(numero: Text) -> Bool {
+    return compte_classe(numero) == 7
+}
+
+// Un compte `sous` est-il un sous-compte de `parent` (préfixe) ?
+fn compte_sous_compte(sous: Text, parent: Text) -> Bool {
+    if len(sous) < len(parent) {
+        return false
+    }
+    return sub(sous, 0, len(parent)) == parent
+}
+
+// ============================ TESTS ============================
+
+fn test_classe() {
+    assert(compte_classe("512") == 5, "512 -> cl 5")
+    assert(compte_classe("607000") == 6, "607000 -> cl 6")
+    assert(classe_nom(4) == "Comptes de tiers", "cl 4")
+}
+
+fn test_validite() {
+    assert(compte_valide("401"), "401 valide")
+    assert(not compte_valide("A01"), "lettres refusees")
+    assert(not compte_valide("901"), "cl 9 invalide")
+    assert(not compte_valide(""), "vide invalide")
+}
+
+fn test_categories() {
+    assert(compte_bilan("215"), "immobilisation = bilan")
+    assert(not compte_bilan("607"), "charge != bilan")
+    assert(compte_gestion("707"), "produit = gestion")
+    assert(compte_charge("607"), "607 charge")
+    assert(compte_produit("707"), "707 produit")
+}
+
+fn test_sous_compte() {
+    assert(compte_sous_compte("4011", "401"), "4011 sous 401")
+    assert(not compte_sous_compte("512", "401"), "512 pas sous 401")
+}
